@@ -9,7 +9,7 @@
 Setting up the cloud function for local testing and deployment:
 
 ```
-$ cd cloud-function
+$ cd HW03/cloud-function
 $ python3 -m venv env
 $ source env/bin/activate
 $ pip install -r requirements.txt
@@ -31,8 +31,8 @@ $ gcloud functions deploy ds561-ptrandev-hw03 --gen2 --runtime=python311 --regio
 
 Set up a python virtual environment and install dependencies for `forbidden-requests.py`:
 
-```python
-$ cd forbidden-requests
+```
+$ cd HW03/forbidden-requests
 $ python3 -m venv env
 $ source /env/bin/activate
 $ pip install -r requirements.txt
