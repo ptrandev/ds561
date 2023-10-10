@@ -50,6 +50,25 @@ Received message: Message {
 }
 ```
 
+A forbidden request looks like this to http-client.py:
+
+```
+$ python3 http-client.py --domain=ds561-ptrandev-hw03-2ry3l7rzva-uk.a.run.app --bucket=/ds561-ptrandev-hw02 --webdir=html --verbose --num_requests=1 --index=1 --ssl
+/Users/phillip/Git/ds561-hw02/HW03/http-client.py:65: DeprecationWarning: ssl.PROTOCOL_TLS is deprecated
+  ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+Requesting  /ds561-ptrandev-hw02/html/0.html  from  ds561-ptrandev-hw03-2ry3l7rzva-uk.a.run.app 443
+400 Bad Request
+content-type: text/html; charset=utf-8
+X-Cloud-Trace-Context: 5c976e900ecd8a36f3b267eda995b6c6;o=1
+Date: Tue, 10 Oct 2023 17:21:17 GMT
+Server: Google Frontend
+Content-Length: 14
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+
+
+b'Banned country'
+```
+
 ## HTTP Client
 
 First, we get the cloud function URL needed to call the function:
