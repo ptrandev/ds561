@@ -28,7 +28,7 @@ instances="$1"
 # Loop to start the instances
 for ((i = 1; i <= $instances; i++)); do
     echo "Starting instance $i"
-    python3 http-client.py --domain=34.86.19.204 --port=5000 --bucket=/ds561-ptrandev-hw02 --webdir=html --num_requests=1000 --index=10000 &
+    python3 http-client.py --domain=34.86.19.204 --port=5000 --bucket=/ds561-ptrandev-hw02 --webdir=html --num_requests=10000 --index=10000 &
 done
 
 # Wait for all instances to finish
