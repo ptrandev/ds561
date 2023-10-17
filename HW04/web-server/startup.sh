@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# check if the directory exists and remove it if it does
+# check if the directory exists; if not, copy the files from the bucket to the directory
 if [ -d "/home/ptrandev/ds561-ptrandev-hw04" ]; then
-    rm -rf /home/ptrandev/ds561-ptrandev-hw04
+    echo "Directory /home/ptrandev/ds561-ptrandev-hw04 exists."
+else
+    # copy the files from the bucket to the directory
+    gsutil -m cp -r gs://ds561-ptrandev-hw04/ /home/ptrandev/
 fi
-
-# download all files from ds561-ptrandev-hw04 bucket
-gsutil -m cp -r gs://ds561-ptrandev-hw04/ /home/ptrandev/
 
 # go to the directory where the flask app is located
 cd /home/ptrandev/ds561-ptrandev-hw04
