@@ -2,6 +2,7 @@ from google.cloud import storage
 from google.cloud import pubsub_v1
 from google.cloud import logging
 from flask import Flask, request
+from waitress import serve
 
 app = Flask(__name__)
 
@@ -60,3 +61,5 @@ def get_file(path):
   
   logging_client.log_text(f'File not found: {bucket_name}/{file_name}')
   return 'File not found', 404
+
+serve(app, host='0.0.0.0', port=5000)
