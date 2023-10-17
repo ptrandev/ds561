@@ -146,9 +146,6 @@ def make_request(domain, port, country, ip, filename, use_ssl, ssl_context, foll
         print(res.status, res.reason)
         print(res.msg)
         print(data)
-    # if response is not 200 or 400, then print the status and reason
-    elif res.status != 200 and res.status != 400:
-        print(res.status, res.reason)
     if follow:
         location_header = res.getheader('location')
         if location_header is not None:
