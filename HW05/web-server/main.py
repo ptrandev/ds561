@@ -85,7 +85,7 @@ def publish_to_database(
         # if status_code is not 200, log to fail_request table
         if status_code != 200:
             # get the row we just inserted
-            request_id = conn.execute(sqlalchemy.text("SELECT request_id FROM request WHERE request_id = LAST_INSERT_ID()")).fetchone()
+            row = conn.execute(sqlalchemy.text("SELECT * FROM request WHERE request_id = LAST_INSERT_ID()")).fetchone()
 
             # insert into fail_request table
             conn.execute(
@@ -96,7 +96,7 @@ def publish_to_database(
                     """
                 ),
                 dict(
-                    request_id=request_id[0],
+                    request_id=row[0],
                     status_code=status_code,
                 ),
             )
