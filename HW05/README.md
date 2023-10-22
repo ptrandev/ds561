@@ -9,6 +9,18 @@ This code is used for the web-server-hw04 VM.
 - `main.py` - The Flask web server using waitress as the WSGI server.
 - `requirements.txt` - The Python requirements for the web server.
 
+Not provided:
+
+- `.env` - This file contains the credentials necessary for the web server to access the database. You must create this file yourself. Instructions are included in the PDF file. The file should be in the following format:
+
+```
+PROJECT_ID=PROJECT_ID_FROM_PDF_FILE
+DB_USER=root
+DB_NAME=DB_NAME_FROM_PDF_FILE
+DB_PASSWORD=PASSWORD_FROM_PDF_FILE
+INSTANCE_CONNECTION_NAME=INSTANCE_CONNECTION_NAME_FROM_PDF_FILE
+```
+
 ## http-client
 
 This code is used for the http-client-hw04 VM.
