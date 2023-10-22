@@ -58,20 +58,19 @@ client = logging.Client()
 logging_client = client.logger("web-server-hw04")
 
 
-def publish_to_database(
-    country, is_banned, client_ip, gender, age, income, requested_file, status_code
+def publish_request_to_database(
+    time_of_request, country, is_banned, client_ip, gender, age, income, requested_file
 ):
-    # insert into database
     with pool.connect() as conn:
         conn.execute(
             sqlalchemy.text(
-              """
-              INSERT INTO request (time_of_request, requested_file, is_banned, country, client_ip, gender, age, income)
-              VALUES (:time_of_request, :requested_file, :is_banned, :country, :client_ip, :gender, :age, :income)
-              """
+                """
+                INSERT INTO request (time_of_request, requested_file, is_banned, country, client_ip, gender, age, income)
+                VALUES (:time_of_request, :requested_file, :is_banned, :country, :client_ip, :gender, :age, :income)
+                """
             ),
             dict(
-                time_of_request=datetime.datetime.now(),
+                time_of_request=time_of_request,
                 requested_file=requested_file,
                 is_banned=is_banned,
                 country=country,
@@ -79,36 +78,38 @@ def publish_to_database(
                 gender=gender,
                 age=age,
                 income=income,
-            ),
+            )
         )
 
-        # if status_code is not 200, log to fail_request table
-        if status_code != 200:
-            # get the row we just inserted
-            row = conn.execute(sqlalchemy.text("SELECT * FROM request WHERE request_id = LAST_INSERT_ID()")).fetchone()
-
-            # insert into fail_request table
-            conn.execute(
-                sqlalchemy.text(
-                    """
-                    INSERT INTO fail_request (request_id, status_code)
-                    VALUES (:request_id, :status_code)
-                    """
-                ),
-                dict(
-                    request_id=row[0],
-                    status_code=status_code,
-                ),
-            )
-
-        # commit changes and close connection
         conn.commit()
         conn.close()
 
+def publish_fail_request_to_database(
+        time_of_request, requested_file, error_code
+):
+    with pool.connect() as conn:
+        conn.execute(
+            sqlalchemy.text(
+                """
+                INSERT INTO fail_request (time_of_request, requested_file, error_code)
+                VALUES (:time_of_request, :requested_file, :error_code)
+                """
+            ),
+            dict(
+                time_of_request=time_of_request,
+                requested_file=requested_file,
+                error_code=error_code,
+            )
+        )
+
+        conn.commit()
+        conn.close()
 
 @app.route("/", defaults={"path": ""}, methods=HTTP_METHODS)
 @app.route("/<path:path>", methods=HTTP_METHODS)
 def get_file(path):
+    time_of_request = datetime.datetime.now()
+
     # get information from headers
     country = request.headers.get("X-country")
     client_ip = request.headers.get("X-client-IP")
@@ -135,27 +136,45 @@ def get_file(path):
         "syria",
     ]
 
+    is_banned = country.lower() in banned_countries if country else None
+
+    publish_request_to_database(
+        time_of_request,
+        country,
+        is_banned,
+        client_ip,
+        gender,
+        age,
+        income,
+        file_name,
+    )
+
     # if the country is banned, publish to banned-countries topic
-    if country and country.lower() in banned_countries:
+    if is_banned:
         publisher.publish(topic_path, country.encode("utf-8"))
         logging_client.log_text(f"Banned country: {country}")
-        publish_to_database(country, True, client_ip, gender, age, income, file_name, 400)
-        return "Banned country", 400
+        publish_fail_request_to_database(
+            time_of_request,
+            file_name,
+            403,
+        )
+        return "Banned country", 403
 
     # only accept GET method
     if request.method != "GET":
         logging_client.log_text(f"Method not implemented: {request.method}")
-        publish_to_database(country, False, client_ip, gender, age, income, file_name, 501)
+        publish_fail_request_to_database(
+            time_of_request,
+            file_name,
+            501,
+        )
         return "Method not implemented", 501
 
     if file_name is None:
-        print("file_name is required")
-        publish_to_database(country, False, client_ip, gender, age, income, file_name, 400)
         return "file_name is required", 400
 
     if bucket_name is None:
         print("bucket_name is required")
-        publish_to_database(country, False, client_ip, gender, age, income, file_name, 400)
         return "bucket_name is required", 400
 
     # get file from bucket
@@ -165,11 +184,14 @@ def get_file(path):
 
     if blob.exists():
         blob_content = blob.download_as_string()
-        publish_to_database(country, False, client_ip, gender, age, income, file_name, 200)
         return blob_content, 200, {"Content-Type": "text/html; charset=utf-8"}
 
     logging_client.log_text(f"File not found: {bucket_name}/{file_name}")
-    publish_to_database(country, False, client_ip, gender, age, income, file_name, 404)
+    publish_fail_request_to_database(
+        time_of_request,
+        file_name,
+        404,
+    )
     return "File not found", 404
 
 
