@@ -167,9 +167,11 @@ def main():
     parser.add_argument("-v", "--verbose", help="Print the responses from the server on stdout", action="store_true")
     parser.add_argument("-r", "--random", help="Initial random seed", type=int, default=0)
     args = parser.parse_args()
-    build_country_cidrs()
+
     if args.random != 0:
         random.seed(args.random)
+
+    build_country_cidrs()
 
     if args.bucket == 'none':
         args.bucket = ''
