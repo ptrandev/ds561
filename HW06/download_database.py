@@ -1,6 +1,3 @@
-# download data from a google SQL database
-
-import sys
 import sqlalchemy
 import argparse
 from google.cloud.sql.connector import Connector
@@ -16,16 +13,11 @@ def download_data():
         request = conn.execute(sqlalchemy.text("SELECT * FROM request"))
         request_data = request.fetchall()
 
-        # get all data from fail_request table
-        fail_request = conn.execute(sqlalchemy.text("SELECT * FROM fail_request"))
-        fail_request_data = fail_request.fetchall()
-
         print("Pulled data from database!")
 
         # write data to csv files
         write_to_csv(request_data, "request.csv")
-        write_to_csv(fail_request_data, "fail_request.csv")
-        
+
         print("Wrote data to .csv files!")
 
         conn.close()
