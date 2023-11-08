@@ -1,3 +1,4 @@
+import apache_beam.io.fileio
 import apache_beam as beam
 import re
 import argparse
@@ -15,17 +16,37 @@ def run(input_files):
     start = time.time()
 
     with beam.Pipeline() as p:
+        # Find the incoming links for each file
         incoming_links = (
             p
-            | "Read HTML Files" >> beam.io.ReadFromText(input_files)
+            | "Read HTML Files as Stream" >> beam.io.ReadFromText(input_files)
             | "Count Incoming Links" >> beam.ParDo(IncomingLinkCount())
-            | "Sum and Combine Incoming Links" >> beam.CombinePerKey(sum)
+            | "Sum Incoming Links" >> beam.CombinePerKey(sum)
+        )
+
+        # Find the outgoing links for each file
+        outgoing_links = (
+            p
+            | "List Files" >> beam.io.fileio.MatchFiles(input_files)
+            | "Read Matches" >> beam.io.fileio.ReadMatches()
+            | "Read Files" >> beam.Map(lambda x: (x.metadata.path, x.read_utf8()))
+            # for each file, sum up the number of <a HREF="*.html"> links that it contains
+            | "Count Outgoing Links" >> beam.Map(lambda x: (x[0], len(re.findall(r'<a HREF="(\d+).html">', x[1]))))
+            # for each key, remove the file path and keep the file number
+            | "Remove File Path" >> beam.Map(lambda x: (int(x[0].split("/")[-1].split(".")[0]), x[1]))
         )
 
         # Find and print the top 5 files with the most incoming links
         incoming_links | "Top 5 Incoming Links" >> beam.transforms.combiners.Top.Largest(
             5, key=lambda x: x[1]
         ) | "Print Top 5 Incoming Links" >> beam.Map(
+            print
+        )
+
+        # Find and print the top 5 files with the most outgoing links
+        outgoing_links | "Top 5 Outgoing Links" >> beam.transforms.combiners.Top.Largest(
+            5, key=lambda x: x[1]
+        ) | "Print Top 5 Outgoing Links" >> beam.Map(
             print
         )
 
@@ -39,8 +60,7 @@ def run_cloud(bucket, directory):
 
 def run_local(directory):
     print("Running locally...")
-    run(f"{directory}0.html")
-
+    run(f"{directory}*.html")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
