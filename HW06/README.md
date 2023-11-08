@@ -1,4 +1,4 @@
-# DS561 HW05
+# DS561 HW06
 
 There are two files used for exploration of the data and figuring out which model to select for the final Python program:
 1. `download_data.py` - downloads the data from the database and saves it to a CSV file. This data is used in the Python notebook to explore the data and test different models.

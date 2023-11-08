@@ -12,6 +12,7 @@ class IncomingLinkCount(beam.DoFn):
         for link in links:
             yield (int(link), 1)
 
+
 def run(input_files):
     start = time.time()
 
@@ -31,9 +32,13 @@ def run(input_files):
             | "Read Matches" >> beam.io.fileio.ReadMatches()
             | "Read Files" >> beam.Map(lambda x: (x.metadata.path, x.read_utf8()))
             # for each file, sum up the number of <a HREF="*.html"> links that it contains
-            | "Count Outgoing Links" >> beam.Map(lambda x: (x[0], len(re.findall(r'<a HREF="(\d+).html">', x[1]))))
+            | "Count Outgoing Links"
+            >> beam.Map(
+                lambda x: (x[0], len(re.findall(r'<a HREF="(\d+).html">', x[1])))
+            )
             # for each key, remove the file path and keep the file number
-            | "Remove File Path" >> beam.Map(lambda x: (int(x[0].split("/")[-1].split(".")[0]), x[1]))
+            | "Remove File Path"
+            >> beam.Map(lambda x: (int(x[0].split("/")[-1].split(".")[0]), x[1]))
         )
 
         # Find and print the top 5 files with the most incoming links
@@ -62,6 +67,7 @@ def run_local(directory):
     print("Running locally...")
     run(f"{directory}*.html")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -76,7 +82,7 @@ if __name__ == "__main__":
         "--directory",
         type=str,
         default="html/",
-        help="The directory path to the HTML files in the bucket (default: html/))",
+        help="The directory path to the HTML files in the bucket (default: html/)",
     )
 
     parser.add_argument(
