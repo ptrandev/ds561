@@ -15,7 +15,6 @@ $ pip3 install -r requirements.txt
 The `top_links.py` program has 2 options:
 
 - `--input` - The directory pattern for input files to process. The default is `gs://ds561-ptrandev-hw02/html/*.html`
-- `--output` - The directory to write the results to. The default is `gs://ds561-ptrandev-hw07/output`
 
 ## Running the program
 
@@ -28,12 +27,10 @@ $ python3 -m top_links
 This will run the program with the default options. If you want to run the program with different options, here is an example:
 
 ```
-$ python3 top_links.py --input gs://bucket-name/path/to/*.html --output gs://bucket-name/path/to/output
+$ python3 top_links.py --input gs://bucket-name/path/to/*.html
 ```
 
 Now to run it on the cloud you'll need additional options. Here is an example:
 ```
-$ python3 -m top_links --region us-east4 --runner DataflowRunner --output=gs://ds561-ptrandev-hw07/output/dataflow --project ds561-trial-projec
-t --temp_location=gs://ds561-ptrandev-hw07/tmp --staging_location=gs://ds561-ptrandev
--hw07/staging
+$ python3 -m top_links --region us-east4 --runner DataflowRunner --project ds561-trial-project --temp_location=gs://ds561-ptrandev-hw07/tmp --staging_location=gs://ds561-ptrandev-hw07/staging
 ```
