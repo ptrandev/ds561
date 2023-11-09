@@ -1,8 +1,14 @@
+import argparse
+import logging
+import re
+import time
+
 import apache_beam.io.fileio
 import apache_beam as beam
-import re
-import argparse
-import time
+from apache_beam.io import ReadFromText
+from apache_beam.io import WriteToText
+from apache_beam.options.pipeline_options import PipelineOptions
+from apache_beam.options.pipeline_options import SetupOptions
 
 
 class IncomingLinkCount(beam.DoFn):
@@ -13,10 +19,34 @@ class IncomingLinkCount(beam.DoFn):
             yield (int(link), 1)
 
 
-def run(input_files):
+def run(argv=None, save_main_session=True):
+    """Main entry point; defines and runs the wordcount pipeline."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--input",
+        dest="input",
+        default="gs://ds561-ptrandev-hw02/html/*.html",
+        help="Input files to process.",
+    )
+    parser.add_argument(
+        "--output",
+        dest="output",
+        default="gs://ds561-ptrandev-hw07/output",
+        help="Output file to write results to.",
+    )
+    known_args, pipeline_args = parser.parse_known_args(argv)
+
+    # We use the save_main_session option because one or more DoFn's in this
+    # workflow rely on global context (e.g., a module imported at module level).
+    pipeline_options = PipelineOptions(pipeline_args)
+    pipeline_options.view_as(SetupOptions).save_main_session = save_main_session
+
     start = time.time()
 
-    with beam.Pipeline() as p:
+    # The pipeline will be run on exiting the with block.
+    with beam.Pipeline(options=pipeline_options) as p:
+        input_files = known_args.input
+
         # Find the incoming links for each file
         incoming_links = (
             p
@@ -41,62 +71,40 @@ def run(input_files):
             >> beam.Map(lambda x: (int(x[0].split("/")[-1].split(".")[0]), x[1]))
         )
 
-        # Find and print the top 5 files with the most incoming links
-        incoming_links | "Top 5 Incoming Links" >> beam.transforms.combiners.Top.Largest(
-            5, key=lambda x: x[1]
-        ) | "Print Top 5 Incoming Links" >> beam.Map(
-            print
+        # Find the top 5 files with the most incoming links
+        top_incoming_links = (
+            incoming_links
+            | "Top 5 Incoming Links" >> beam.transforms.combiners.Top.Largest(
+                5, key=lambda x: x[1]
+            )
         )
 
-        # Find and print the top 5 files with the most outgoing links
-        outgoing_links | "Top 5 Outgoing Links" >> beam.transforms.combiners.Top.Largest(
-            5, key=lambda x: x[1]
-        ) | "Print Top 5 Outgoing Links" >> beam.Map(
-            print
+        # Find the top 5 files with the most outgoing links
+        top_outgoing_links = (
+            outgoing_links
+            | "Top 5 Outgoing Links" >> beam.transforms.combiners.Top.Largest(
+                5, key=lambda x: x[1]
+            )
+        )
+
+        # print out the top 5 incoming links
+        top_incoming_links | "Print Top 5 Incoming Links" >> beam.Map(print)
+
+        # print out the top 5 outgoing links
+        top_outgoing_links | "Print Top 5 Outgoing Links" >> beam.Map(print)
+
+        # write the top 5 incoming links to a file
+        top_incoming_links | "Write Top 5 Incoming Links" >> WriteToText(
+            known_args.output + "/top_incoming_links"
+        )
+
+        # write the top 5 outgoing links to a file
+        top_outgoing_links | "Write Top 5 Outgoing Links" >> WriteToText(
+            known_args.output + "/top_outgoing_links"
         )
 
     print(f"Total time: {time.time() - start} seconds")
 
-
-def run_cloud(bucket, directory):
-    print("Running on the cloud...")
-    run(f"gs://{bucket}/{directory}*.html")
-
-
-def run_local(directory):
-    print("Running locally...")
-    run(f"{directory}*.html")
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "--bucket",
-        type=str,
-        default="ds561-ptrandev-hw02",
-        help="The name of the Google Cloud Storage bucket (default: ds561-ptrandev-hw02)",
-    )
-
-    parser.add_argument(
-        "--directory",
-        type=str,
-        default="html/",
-        help="The directory path to the HTML files in the bucket (default: html/)",
-    )
-
-    parser.add_argument(
-        "--local",
-        type=bool,
-        default=False,
-        help="Run the pipeline locally (default: False)",
-    )
-
-    bucket = parser.parse_args().bucket
-    directory = parser.parse_args().directory
-    local = parser.parse_args().local
-
-    if local:
-        run_local(directory)
-    else:
-        run_cloud(bucket, directory)
+    logging.getLogger().setLevel(logging.INFO)
+    run()
