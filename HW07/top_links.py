@@ -5,8 +5,6 @@ import time
 
 import apache_beam.io.fileio
 import apache_beam as beam
-from apache_beam.io import ReadFromText
-from apache_beam.io import WriteToText
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
 
@@ -27,12 +25,6 @@ def run(argv=None, save_main_session=True):
         dest="input",
         default="gs://ds561-ptrandev-hw02/html/*.html",
         help="Input files to process.",
-    )
-    parser.add_argument(
-        "--output",
-        dest="output",
-        default="gs://ds561-ptrandev-hw07/output",
-        help="Output file to write results to.",
     )
     known_args, pipeline_args = parser.parse_known_args(argv)
 
@@ -87,21 +79,16 @@ def run(argv=None, save_main_session=True):
             )
         )
 
-        # print out the top 5 incoming links
-        top_incoming_links | "Print Top 5 Incoming Links" >> beam.Map(print)
-
-        # print out the top 5 outgoing links
-        top_outgoing_links | "Print Top 5 Outgoing Links" >> beam.Map(print)
-
-        # write the top 5 incoming links to a file
-        top_incoming_links | "Write Top 5 Incoming Links" >> WriteToText(
-            known_args.output + "/top_incoming_links"
+        # log the top 5 incoming links with the title "Top 5 Incoming Links"
+        top_incoming_links | "Log Top 5 Incoming Links" >> beam.Map(
+            lambda x: logging.info(f"Top 5 Incoming Links: {x}")
         )
 
-        # write the top 5 outgoing links to a file
-        top_outgoing_links | "Write Top 5 Outgoing Links" >> WriteToText(
-            known_args.output + "/top_outgoing_links"
+        # log the top 5 outgoing links with the title "Top 5 Outgoing Links"
+        top_outgoing_links | "Log Top 5 Outgoing Links" >> beam.Map(
+            lambda x: logging.info(f"Top 5 Outgoing Links: {x}")
         )
+
 
     print(f"Total time: {time.time() - start} seconds")
 
