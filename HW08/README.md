@@ -2,7 +2,7 @@
 
 ## web-server
 
-This code is used for the web-server-hw04 VM.
+This code is used for the web-server-01-hw08 and web-server-02-hw08 VMs.
 
 - `main.py` - The Flask web server using waitress as the WSGI server. This has been uploaded to gs://ds561-ptrandev-hw08/main.py for the startup script to download.
 - `requirements.txt` - The Python requirements for the web server. This has been uploaded to gs://ds561-ptrandev-hw08/requirements.txt for the startup script to download.
