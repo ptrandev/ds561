@@ -14,7 +14,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
-ENV GOOGLE_APPLICATION_CREDENTIALS="ds561-trial-project-1d2f2504cac8.json"
+ENV GOOGLE_APPLICATION_CREDENTIALS='web-server-hw09.json'
 
 WORKDIR /app
 
@@ -24,25 +24,26 @@ ARG UID=10001
 RUN adduser \
     --disabled-password \
     --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
+    --home "/app" \
     --uid "${UID}" \
-    appuser
-
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
-# Leverage a bind mount to requirements.txt to avoid having to copy them into
-# into this layer.
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    python -m pip install -r requirements.txt
+    "appuser"
 
 # Switch to the non-privileged user to run the application.
 USER appuser
 
-# Copy the source code into the container.
+# Copy the source code and requirements into the container.
 COPY . .
+
+# Change ownership of the /app directory to the non-root user.
+USER root
+RUN chown -R appuser:appuser /app
+
+# Switch back to the non-privileged user.
+USER appuser
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the port that the application listens on.
 EXPOSE 5000
