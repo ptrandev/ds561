@@ -1,25 +1,8 @@
-import os
 from google.cloud import storage
 from google.cloud import pubsub_v1
 from google.cloud import logging
 from flask import Flask, request
 from waitress import serve
-
-from google.auth import exceptions
-from google.auth import default
-
-try:
-    # Attempt to get credentials from the environment variable
-    credentials, project = default()
-
-except exceptions.DefaultCredentialsError:
-    credentials, project = default(scopes=['https://www.googleapis.com/auth/cloud-platform'], key_path=os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
-
-# Now you can use 'credentials' in your Google Cloud API client initialization
-# For example, if you're using the Storage API, you could do something like this:
-from google.cloud import storage
-
-client = storage.Client(credentials=credentials, project=project)
 
 app = Flask(__name__)
 
