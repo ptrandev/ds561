@@ -12,9 +12,9 @@ HTTP_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'T
 publisher = pubsub_v1.PublisherClient()
 topic_path = publisher.topic_path('ds561-trial-project', 'banned-countries-topic')
 
-# set up logging; log into web-server-hw04
+# set up logging; log into web-server-hw09
 client = logging.Client()
-logging_client = client.logger('web-server-hw04')
+logging_client = client.logger('web-server-hw09')
 
 @app.route('/', defaults={'path': ''}, methods=HTTP_METHODS)
 @app.route('/<path:path>', methods=HTTP_METHODS)
@@ -30,11 +30,13 @@ def get_file(path):
   if country and country.lower() in banned_countries:
     publisher.publish(topic_path, country.encode('utf-8'))
     logging_client.log_text(f'Banned country: {country}')
+    print(f'Banned country: {country}')
     return 'Banned country', 400
 
   # only accept GET method
   if request.method != 'GET':
     logging_client.log_text(f'Method not implemented: {request.method}')
+    print(f'Method not implemented: {request.method}')
     return 'Method not implemented', 501
 
   # get dirname/filename.html from path
@@ -60,6 +62,7 @@ def get_file(path):
     return blob_content, 200, {'Content-Type': 'text/html; charset=utf-8'}
   
   logging_client.log_text(f'File not found: {bucket_name}/{file_name}')
+  print(f'File not found: {bucket_name}/{file_name}')
   return 'File not found', 404
 
 serve(app, host='0.0.0.0', port=5000)
