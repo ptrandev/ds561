@@ -17,7 +17,7 @@ spec:
           secretName: service-account-key
       containers:
       - name: web-server-hw09
-        image: us-west2-docker.pkg.dev/ds561-trial-project/docker-hw09/web-server-hw09:1.0
+        image: us-west2-docker.pkg.dev/ds561-trial-project/docker-hw09/web-server-hw09:1.0.0
         volumeMounts:
         - name: google-cloud-key
           mountPath: /var/secrets/google
