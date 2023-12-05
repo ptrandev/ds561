@@ -26,3 +26,23 @@ INSTANCE_CONNECTION_NAME=INSTANCE_CONNECTION_NAME_FROM_PDF_FILE
 This code is used to test the web-server-hw10 VM.
 
 - `http-client.py` - The http client provided by the professor. This allows us to send requests to the web server.
+
+## generate-content
+
+This code is used to generate the content for the mini-web.
+
+- `generate-content.py` - The Python script that generates the content for the mini-web. Provided by the professor.
+
+## hw10.yaml
+
+This file is used to create the entire deployment on GCP. You can run it with the following command:
+
+```
+gcloud deployment-manager deployments create hw10 --config hw10.yaml
+```
+
+And to delete the deployment:
+
+```
+gcloud deployment-manager deployments delete hw10
+```

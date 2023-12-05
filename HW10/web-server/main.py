@@ -15,7 +15,6 @@ load_dotenv()
 
 INSTANCE_CONNECTION_NAME = os.environ.get("INSTANCE_CONNECTION_NAME")
 DB_USER = os.environ.get("DB_USER")
-DB_PASSWORD = os.environ.get("DB_PASSWORD")
 DB_NAME = os.environ.get("DB_NAME")
 
 
@@ -24,7 +23,6 @@ def getconn():
         INSTANCE_CONNECTION_NAME,
         "pymysql",
         user=DB_USER,
-        password=DB_PASSWORD,
         db=DB_NAME,
     )
     return conn
