@@ -1,11 +1,4 @@
 resources:
-# for storing our mini-web
-- name: ds561-ptrandev-deployment-hw10
-  type: storage.v1.bucket
-  properties:
-    location: us-east4
-    storageClass: STANDARD
-
 # create a SQL instance
 - name: ds561-ptrandev-sql-instance-hw10
   type: sqladmin.v1beta4.instance
@@ -29,68 +22,116 @@ resources:
     name: ds561-ptrandev-sql-db-hw10
     instance: $(ref.ds561-ptrandev-sql-instance-hw10.name)
 
-# create a service account that allows the VM to access the SQL instance, write to cloud logging, and read/write to the bucket
-- name: ds561-ptrandev-sa-hw10
+# Create a service account for the web server VM
+- name: web-server-sa-hw10
   type: iam.v1.serviceAccount
   properties:
-    accountId: ds561-ptrandev-sa-hw10
-    displayName: ds561-ptrandev-sa-hw10
-    project: ds561-ptrandev
-    description: ds561-ptrandev-sa-hw10
+    accountId: web-server-sa-hw10
+    displayName: web-server-sa-hw10
 
-# create a VM with a startup script; use the service account to access the SQL instance, write to cloud logging, and read/write to the bucket
-- name: ds561-ptrandev-vm-hw10
+# Create a service account for the forbidden countries VM
+- name: forbidden-countries-sa-hw10
+  type: iam.v1.serviceAccount
+  properties:
+    accountId: forbidden-countries-sa-hw10
+    displayName: forbidden-countries-sa-hw10
+
+# Create a storage bucket for storing our mini-web
+- name: ds561-ptrandev-mini-web-hw10
+  type: storage.v1.bucket
+  properties:
+    location: us-east4
+    storageClass: STANDARD
+    lifecycle:
+      rule:
+      - action:
+          type: Delete
+        condition:
+          age: 0
+
+# Create a pub/sub topic for our banned countries
+- name: banned-countries-topic-hw10
+  type: pubsub.v1.topic
+  properties:
+    topic: banned-countries-topic-hw10
+  accessControl:
+    gcpIamPolicy:
+      bindings:
+      - role: roles/pubsub.publisher
+        members: serviceAccount:$(ref.web-server-sa-hw10.email)
+
+# Create a pub/sub subscription for our banned countries
+- name: banned-countries-subscription-hw10
+  type: pubsub.v1.subscription
+  properties:
+    subscription: banned-countries-subscription-hw10
+    topic: $(ref.banned-countries-topic-hw10.name)
+    ackDeadlineSeconds: 10
+  accessControl:
+    gcpIamPolicy:
+      bindings:
+      - role: roles/pubsub.subscriber
+        members: serviceAccount:$(ref.forbidden-countries-sa-hw10.email)
+
+# give the service account permissions to access our mini-web bucket
+- name: ds561-ptrandev-mini-web-hw10-binding
+  type: gcp-types/storage-v1:virtual.buckets.iamMemberBinding
+  properties:
+    bucket: $(ref.ds561-ptrandev-mini-web-hw10.name)
+    member: serviceAccount:$(ref.web-server-sa-hw10.email)
+    role: roles/storage.admin
+
+# give the service account permissions to access our bucket containing the flask app
+- name: ds561-ptrandev-hw10-binding
+  type: gcp-types/storage-v1:virtual.buckets.iamMemberBinding
+  properties:
+    bucket: ds561-ptrandev-hw10
+    member: serviceAccount:$(ref.web-server-sa-hw10.email)
+    role: roles/storage.admin
+
+# create a binding for allUsers to be able to view the contents of our mini-web bucket
+- name: mini-web-hw10-allUsers-binding
+  type: gcp-types/storage-v1:virtual.buckets.iamMemberBinding
+  properties:
+    bucket: $(ref.ds561-ptrandev-mini-web-hw10.name)
+    member: allUsers
+    role: roles/storage.objectViewer
+
+# create a binding for web-server-sa to have access to SQL instance
+- name: ds561-ptrandev-sql-instance-hw10-binding
+  type: gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding
+  properties:
+    resource: $(ref.ds561-ptrandev-sql-instance-hw10.name)
+    member: serviceAccount:$(ref.web-server-sa-hw10.email)
+    role: roles/cloudsql.client
+
+# create a VM for our web server
+- name: web-server-hw10
   type: compute.v1.instance
   properties:
-    zone: us-east4-a
-    machineType: zones/us-east4-a/machineTypes/f1-micro
+    zone: us-east1-b
+    machineType: zones/us-east1-b/machineTypes/f1-micro
     disks:
     - deviceName: boot
       type: PERSISTENT
       boot: true
       autoDelete: true
       initializeParams:
-        sourceImage: projects/debian-cloud/global/images/family/debian-9
+        sourceImage: projects/debian-cloud/global/images/family/debian-11
     networkInterfaces:
     - network: global/networks/default
       accessConfigs:
       - name: External NAT
         type: ONE_TO_ONE_NAT
     serviceAccounts:
-      - email: $(ref.ds561-ptrandev-sa-hw10.email)
-        scopes:
-          - https://www.googleapis.com/auth/cloud-platform
-          - https://www.googleapis.com/auth/sqlservice.admin
-          - https://www.googleapis.com/auth/logging.write
-          - https://www.googleapis.com/auth/devstorage.full_control
-          - https://www.googleapis.com/auth/devstorage.read_write
-          - https://www.googleapis.com/auth/devstorage.read_only
-          - https://www.googleapis.com/auth/devstorage.write_only
-          - https://www.googleapis.com/auth/devstorage.media_upload
-          - https://www.googleapis.com/auth/devstorage.metadata
-          - https://www.googleapis.com/auth/devstorage.read_metadata
-          - https://www.googleapis.com/auth/devstorage.write_metadata
-          - https://www.googleapis.com/auth/devstorage.appdevs
-          - https://www.googleapis.com/auth/devstorage.apps
-          - https://www.googleapis.com/auth/devstorage.firstparty.read_only
-          - https://www.googleapis.com/auth/devstorage.firstparty.read_write
-          - https://www.googleapis.com/auth/devstorage.firstparty.write_only
-          - https://www.googleapis.com/auth/devstorage.full_control
-          - https://www.googleapis.com/auth/devstorage.read_only
-          - https://www.googleapis.com/auth/devstorage.read_write
-          - https://www.googleapis.com/auth/devstorage.write_only
-          - https://www.googleapis.com/auth/devstorage.media_upload
-          - https://www.googleapis.com/auth/devstorage.metadata
-          - https://www.googleapis.com/auth/devstorage.read_metadata
-          - https://www.googleapis.com/auth/devstorage.write_metadata
-          - https://www.googleapis.com/auth/devstorage.appdevs
-          - https://www.googleapis.com/auth/devstorage.apps
-          - https://www.googleapis.com/auth/devstorage.firstparty.read_only
-          - https://www.googleapis.com/auth/devstorage.firstparty.read_write
-          - https://www.googleapis.com/auth/devstorage.firstparty.write_only
-          - https://www.googleapis.com/auth/cloud-platform
-          - https://www.googleapis.com/auth
+    - email: $(ref.web-server-sa-hw10.email)
+      scopes:
+        - https://www.googleapis.com/auth/cloud-platform
+        - https://www.googleapis.com/auth/pubsub
+        - https://www.googleapis.com/auth/sqlservice.admin
     metadata:
+      dependsOn:
+      - $(ref.ds561-ptrandev-sql-instance-hw10.name)
       items:
       - key: startup-script
         value: |
@@ -109,13 +150,42 @@ resources:
           apt install python3-pip -y
           pip3 install -r requirements.txt
 
+          # create a directory for the html files
+          mkdir html
+
           # run the generate-data.py script
-          python3 generate-content.py
+          python3 generate-content.py -n 10 -m 10
 
           # copy the html folder to the bucket
-          gsutil -m cp -r html/ gs://ds561-ptrandev-deployment-hw10
+          gsutil -m cp -r html/ gs://ds561-ptrandev-mini-web-hw10
 
           # run the flask app
           python3 main.py
-    dependsOn:
-      - ds561-ptrandev-sql-instance-hw10
+
+# create a VM for our forbidden countries server
+- name: forbidden-countries-hw10
+  type: compute.v1.instance
+  properties:
+    zone: us-east1-b
+    machineType: zones/us-east1-b/machineTypes/f1-micro
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/debian-cloud/global/images/family/debian-11
+    networkInterfaces:
+    - network: global/networks/default
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+    # associate the service account with the VM
+    serviceAccounts:
+    - email: $(ref.forbidden-countries-sa-hw10.email)
+      scopes:
+        - https://www.googleapis.com/auth/cloud-platform
+        - https://www.googleapis.com/auth/pubsub
+    metadata:
+      dependsOn:
+      - $(ref.ds561-ptrandev-sql-instance-hw10.name)

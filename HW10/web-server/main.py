@@ -49,7 +49,7 @@ HTTP_METHODS = [
 
 # set up pub sub
 publisher = pubsub_v1.PublisherClient()
-topic_path = publisher.topic_path("ds561-trial-project", "banned-countries-topic")
+topic_path = publisher.topic_path("ds561-trial-project", "banned-countries-topic-hw10")
 
 # set up logging; log into web-server-hw04
 client = logging.Client()
