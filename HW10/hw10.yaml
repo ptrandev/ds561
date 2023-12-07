@@ -107,6 +107,14 @@ resources:
     member: serviceAccount:$(ref.web-server-sa-hw10.email)
     role: roles/cloudsql.client
 
+# create a binding for cloud logging
+- name: cloud-logging-hw10-binding
+  type: gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding
+  properties:
+    resource: ds561-trial-project
+    role: roles/logging.logWriter
+    member: serviceAccount:$(ref.web-server-sa-hw10.email)
+
 # create a binding for forbidden-countries-sa to have access to pubsub subscription
 - name: forbidden-countries-subscription-hw10-binding
   type: gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding
