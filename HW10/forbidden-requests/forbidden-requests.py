@@ -3,7 +3,7 @@ from google.cloud import pubsub_v1
 # listen for banned countries
 subscriber = pubsub_v1.SubscriberClient()
 
-subscription_path = subscriber.subscription_path('ds561-trial-project', 'banned-countries-sub')
+subscription_path = subscriber.subscription_path('ds561-trial-project', 'banned-countries-subscription-hw10')
 
 def callback(message):
   print('Received message: {}'.format(message))
