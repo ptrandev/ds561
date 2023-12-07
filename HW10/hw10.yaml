@@ -4,7 +4,6 @@ resources:
 # SQL
 #
 
-
 # create a SQL instance
 - name: ds561-ptrandev-sql-instance-hw10
   type: sqladmin.v1beta4.instance
