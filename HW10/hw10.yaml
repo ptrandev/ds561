@@ -43,12 +43,6 @@ resources:
   properties:
     location: us-east4
     storageClass: STANDARD
-    lifecycle:
-      rule:
-      - action:
-          type: Delete
-        condition:
-          age: 0
 
 # Create a pub/sub topic for our banned countries
 - name: banned-countries-topic-hw10
