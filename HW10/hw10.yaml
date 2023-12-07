@@ -161,7 +161,7 @@ resources:
               echo "Directory /root/ds561-ptrandev-hw10 exists."
           else
               # copy the files from the bucket to the directory
-              gsutil -m cp -r gs://ds561-ptrandev-hw10/ /root/
+              gsutil -m cp -r gs://ds561-ptrandev-hw10/web-server/ /root/
           fi
 
           # go to the directory where the flask app is located
@@ -210,3 +210,23 @@ resources:
     metadata:
       dependsOn:
       - $(ref.ds561-ptrandev-sql-instance-hw10.name)
+      items:
+      - key: startup-script
+        value: |
+          #!/bin/bash
+          if [ -d "/root/ds561-ptrandev-hw10" ]; then
+              echo "Directory /root/ds561-ptrandev-hw10 exists."
+          else
+              # copy the files from the bucket to the directory
+              gsutil -m cp -r gs://ds561-ptrandev-hw10/forbidden-requests/ /root/
+          fi
+
+          # go to the directory where the flask app is located
+          cd /root/ds561-ptrandev-hw10
+
+          # install dependencies from requirements.txt
+          apt install python3-pip -y
+          pip3 install -r requirements.txt
+
+          # run the flask app
+          python3 forbidden-requests.py

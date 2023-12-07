@@ -8,6 +8,7 @@ This code is used for the web-server-hw10 VM.
 
 - `main.py` - The Flask web server using waitress as the WSGI server.
 - `requirements.txt` - The Python requirements for the web server.
+- `generate-content.py` - The Python script that generates the content for the mini-web. Provided by the professor.
 
 Not provided:
 
@@ -26,12 +27,6 @@ INSTANCE_CONNECTION_NAME=INSTANCE_CONNECTION_NAME_FROM_PDF_FILE
 This code is used to test the web-server-hw10 VM.
 
 - `http-client.py` - The http client provided by the professor. This allows us to send requests to the web server.
-
-## generate-content
-
-This code is used to generate the content for the mini-web.
-
-- `generate-content.py` - The Python script that generates the content for the mini-web. Provided by the professor.
 
 ## hw10.yaml
 
