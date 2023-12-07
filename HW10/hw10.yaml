@@ -1,4 +1,10 @@
 resources:
+
+#
+# SQL
+#
+
+
 # create a SQL instance
 - name: ds561-ptrandev-sql-instance-hw10
   type: sqladmin.v1beta4.instance
@@ -23,6 +29,10 @@ resources:
     name: ds561-ptrandev-sql-db-hw10
     instance: $(ref.ds561-ptrandev-sql-instance-hw10.name)
 
+#
+# SERVICE ACCOUNTS
+#
+
 # Create a service account for the web server VM
 - name: web-server-sa-hw10
   type: iam.v1.serviceAccount
@@ -36,6 +46,10 @@ resources:
   properties:
     accountId: forbidden-countries-sa-hw10
     displayName: forbidden-countries-sa-hw10
+
+#
+# STORAGE BUCKETS
+#
 
 # Create a storage bucket for storing our mini-web
 - name: ds561-ptrandev-mini-web-hw10
@@ -55,6 +69,10 @@ resources:
       - role: roles/pubsub.publisher
         members: serviceAccount:$(ref.web-server-sa-hw10.email)
 
+#
+# PUB/SUB
+#
+
 # Create a pub/sub subscription for our banned countries
 - name: banned-countries-subscription-hw10
   type: pubsub.v1.subscription
@@ -70,6 +88,10 @@ resources:
     bucket: $(ref.ds561-ptrandev-mini-web-hw10.name)
     member: serviceAccount:$(ref.web-server-sa-hw10.email)
     role: roles/storage.admin
+
+#
+# SERVICE ACCOUNT BINDINGS
+#
 
 # give the service accounts permissions to access our bucket containing the flask app
 - name: ds561-ptrandev-hw10-binding
@@ -117,6 +139,10 @@ resources:
     member: serviceAccount:$(ref.forbidden-countries-sa-hw10.email)
     role: roles/pubsub.subscriber
 
+#
+# FIREWALL RULES
+#
+
 # create a firewall rule to allow traffic on port 5000
 - name: allow-5000-hw10
   type: compute.v1.firewall
@@ -129,11 +155,19 @@ resources:
       ports:
       - 5000
 
+#
+# STATIC IP ADDRESSES
+#
+
 # create a static IP for our web server
 - name : web-server-hw10-ip
   type: compute.v1.address
   properties:
     region: us-east1
+
+#
+# VIRTUAL MACHINES
+#
 
 # create a VM for our web server, n1-standard-1
 - name: web-server-hw10
