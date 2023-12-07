@@ -18,7 +18,6 @@ Not provided:
 PROJECT_ID=PROJECT_ID_FROM_PDF_FILE
 DB_USER=root
 DB_NAME=DB_NAME_FROM_PDF_FILE
-DB_PASSWORD=PASSWORD_FROM_PDF_FILE
 INSTANCE_CONNECTION_NAME=INSTANCE_CONNECTION_NAME_FROM_PDF_FILE
 ```
 
@@ -39,5 +38,6 @@ gcloud deployment-manager deployments create hw10 --config hw10.yaml
 And to delete the deployment:
 
 ```
+gsutil -m rm -r gs://ds561-ptrandev-mini-web-hw10
 gcloud deployment-manager deployments delete hw10
 ```
