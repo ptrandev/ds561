@@ -6,6 +6,7 @@ resources:
     name: ds561-ptrandev-sql-instance-hw10
     region: us-east4
     databaseVersion: MYSQL_8_0
+    maxDiskSize: 100000000000
     settings:
       # 4 CPU, 16GB RAM, 100GB SSD
       tier: db-custom-4-16384
@@ -101,16 +102,28 @@ resources:
 - name: ds561-ptrandev-sql-instance-hw10-binding
   type: gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding
   properties:
-    resource: $(ref.ds561-ptrandev-sql-instance-hw10.name)
+    resource: ds561-trial-project
     member: serviceAccount:$(ref.web-server-sa-hw10.email)
     role: roles/cloudsql.client
 
-# create a VM for our web server
+# create a firewall rule to allow traffic on port 5000
+- name: allow-5000-hw10
+  type: compute.v1.firewall
+  properties:
+    network: global/networks/default
+    targetTags:
+      - allow-5000-hw10
+    allowed:
+    - IPProtocol: TCP
+      ports:
+      - 5000
+
+# create a VM for our web server, n1-standard-1
 - name: web-server-hw10
   type: compute.v1.instance
   properties:
     zone: us-east1-b
-    machineType: zones/us-east1-b/machineTypes/f1-micro
+    machineType: zones/us-east1-b/machineTypes/n1-standard-1
     disks:
     - deviceName: boot
       type: PERSISTENT
@@ -123,6 +136,13 @@ resources:
       accessConfigs:
       - name: External NAT
         type: ONE_TO_ONE_NAT
+      allowed:
+      - IPProtocol: TCP
+        ports:
+        - 5000
+    tags:
+      items:
+      - allow-5000-hw10
     serviceAccounts:
     - email: $(ref.web-server-sa-hw10.email)
       scopes:
@@ -132,6 +152,7 @@ resources:
     metadata:
       dependsOn:
       - $(ref.ds561-ptrandev-sql-instance-hw10.name)
+      - $(ref.allow-5000-hw10.name)
       items:
       - key: startup-script
         value: |
