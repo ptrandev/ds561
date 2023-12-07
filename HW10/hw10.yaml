@@ -13,7 +13,6 @@ resources:
     databaseVersion: MYSQL_8_0
     maxDiskSize: 100000000000
     settings:
-      # 4 CPU, 16GB RAM, 100GB SSD
       tier: db-custom-4-16384
       backupConfiguration:
         enabled: true
